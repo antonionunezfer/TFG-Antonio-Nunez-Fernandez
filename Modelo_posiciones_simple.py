@@ -65,7 +65,7 @@ Modelo_posiciones.setObjective(quicksum(C[k, ultima_maquina] for k in range(posi
 # --- Resolver el modelo ---
 Modelo_posiciones.optimize()
 
-# --- Resultados y GAP ---
+# ----------------------------- RESULTADOS -------------------------
 if Modelo_posiciones.status in [GRB.OPTIMAL, GRB.TIME_LIMIT]:
     # El GAP se obtiene con el atributo .MIPGap (se multiplica por 100 para porcentaje)
     gap_actual = Modelo_posiciones.MIPGap * 100
@@ -80,10 +80,8 @@ if Modelo_posiciones.status in [GRB.OPTIMAL, GRB.TIME_LIMIT]:
     print(f"GAP Relativo: {gap_actual:.2f}%")
     print("="*40)
 
-    # --- Dibujar Diagrama de Gantt ---
+    # ------------------ DIAGRAMA DE GANTT -------------------------
     fig, ax = plt.subplots(figsize=(12, 6))
-    
-    # Generar paleta de colores fija para que cada trabajo sea distinguible
     cmap = plt.get_cmap('tab20') 
     
     for i in range(trabajos):
@@ -116,5 +114,6 @@ elif Modelo_posiciones.status == GRB.INFEASIBLE:
     print("El modelo es infactible. Revisa las restricciones.")
 else:
     print(f"Proceso finalizado sin solución óptima. Status: {Modelo_posiciones.status}") 
-    
+  
+
     
