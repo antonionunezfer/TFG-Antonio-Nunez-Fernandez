@@ -55,17 +55,17 @@ for indice, nombre_archivo in enumerate(archivos_txt, start=1):
     Modelo_precedencias_CON_PESO.setParam('OutputFlag', 0)  # Gurobi en modo silencioso
 
     # --- Variables de decisión ---
-    α = Modelo_precedencias_CON_PESO.addVars(trabajos, trabajos, vtype=GRB.BINARY, name="alfa")
+    alfa = Modelo_precedencias_CON_PESO.addVars(trabajos, trabajos, vtype=GRB.BINARY, name="alfa")
     C = Modelo_precedencias_CON_PESO.addVars(trabajos, maquinas, lb=0, vtype=GRB.CONTINUOUS, name="C")
 
     # --- Restricciones ---
     for i in range(trabajos):
         for k in range(i + 1, trabajos):
-            Modelo_precedencias_CON_PESO.addConstr(α[i, k] + α[k, i] == 1, name=f"prec_{i}_{k}")
+            Modelo_precedencias_CON_PESO.addConstr(alfa[i, k] + alfa[k, i] == 1, name=f"prec_{i}_{k}")
 
     for i in range(trabajos):
         Modelo_precedencias_CON_PESO.addConstr(
-            C[i, 0] >= quicksum(p[k][0] * α[k, i] for k in range(trabajos) if k != i) + p[i][0],
+            C[i, 0] >= quicksum(p[k][0] * alfa[k, i] for k in range(trabajos) if k != i) + p[i][0],
             name=f"maquina_0_trabajo_{i}"
         )
 
@@ -74,7 +74,7 @@ for indice, nombre_archivo in enumerate(archivos_txt, start=1):
             if i != k:
                 for j in range(maquinas):
                     Modelo_precedencias_CON_PESO.addConstr(
-                        C[k, j] >= C[i, j] + p[k][j] * α[i, k] - M * (1 - α[i, k]),
+                        C[k, j] >= C[i, j] + p[k][j] * alfa[i, k] - M * (1 - alfa[i, k]),
                         name=f"disyuntiva_{i}_{k}_{j}"
                     )
                 
@@ -122,5 +122,6 @@ for indice, nombre_archivo in enumerate(archivos_txt, start=1):
     
     # --- Liberar memoria ---
     Modelo_precedencias_CON_PESO.dispose()
+
 
 print("\n🎉 ¡PROCESO TOTALMENTE FINALIZADO! Revisa tu archivo Excel.")
