@@ -56,35 +56,35 @@ for indice, nombre_archivo in enumerate(archivos_txt, start=1):
     Modelo_posiciones_con_pesos.setParam('OutputFlag', 0)  # Gurobi en modo silencioso
 
     # --- Variables de decisión ---
-    β = Modelo_posiciones_con_pesos.addVars(trabajos, posiciones, vtype=GRB.BINARY, name="beta")
+    beta = Modelo_posiciones_con_pesos.addVars(trabajos, posiciones, vtype=GRB.BINARY, name="beta")
     C = Modelo_posiciones_con_pesos.addVars(posiciones, maquinas, lb=0, vtype=GRB.CONTINUOUS, name="C")
     CC = Modelo_posiciones_con_pesos.addVars(trabajos, maquinas, lb=0, vtype=GRB.CONTINUOUS, name="CC")
 
     # --- Restricciones ---
     for i in range(trabajos):
-        Modelo_posiciones_con_pesos.addConstr(quicksum(β[i, k] for k in range(posiciones)) == 1)
+        Modelo_posiciones_con_pesos.addConstr(quicksum(beta[i, k] for k in range(posiciones)) == 1)
 
     for k in range(posiciones):
-        Modelo_posiciones_con_pesos.addConstr(quicksum(β[i, k] for i in range(trabajos)) == 1)
+        Modelo_posiciones_con_pesos.addConstr(quicksum(beta[i, k] for i in range(trabajos)) == 1)
 
-    Modelo_posiciones_con_pesos.addConstr(C[0, 0] == quicksum(p[i][0] * β[i, 0] for i in range(trabajos)))
+    Modelo_posiciones_con_pesos.addConstr(C[0, 0] == quicksum(p[i][0] * beta[i, 0] for i in range(trabajos)))
 
     for k in range(1, posiciones):
-        Modelo_posiciones_con_pesos.addConstr(C[k, 0] >= C[k-1, 0] + quicksum(p[i][0] * β[i, k] for i in range(trabajos)))
+        Modelo_posiciones_con_pesos.addConstr(C[k, 0] >= C[k-1, 0] + quicksum(p[i][0] * beta[i, k] for i in range(trabajos)))
 
     for k in range(posiciones):    
         for j in range(1, maquinas):
-            Modelo_posiciones_con_pesos.addConstr(C[k, j] >= C[k, j-1] + quicksum(p[i][j] * β[i, k] for i in range(trabajos)))
+            Modelo_posiciones_con_pesos.addConstr(C[k, j] >= C[k, j-1] + quicksum(p[i][j] * beta[i, k] for i in range(trabajos)))
 
     for k in range(1, posiciones):    
         for j in range(1, maquinas):
-            Modelo_posiciones_con_pesos.addConstr(C[k, j] >= C[k-1, j] + quicksum(p[i][j] * β[i, k] for i in range(trabajos)))
+            Modelo_posiciones_con_pesos.addConstr(C[k, j] >= C[k-1, j] + quicksum(p[i][j] * beta[i, k] for i in range(trabajos)))
 
     ultima_maquina = maquinas - 1
 
     for i in range(trabajos):
         for k in range(posiciones):
-            Modelo_posiciones_con_pesos.addConstr(CC[i, ultima_maquina] >= C[k, ultima_maquina] - M * (1 - β[i, k]))
+            Modelo_posiciones_con_pesos.addConstr(CC[i, ultima_maquina] >= C[k, ultima_maquina] - M * (1 - beta[i, k]))
 
     # --- Función objetivo ---
     Modelo_posiciones_con_pesos.setObjective(quicksum(w[i] * CC[i, ultima_maquina] for i in range(trabajos)), GRB.MINIMIZE)
@@ -118,5 +118,6 @@ for indice, nombre_archivo in enumerate(archivos_txt, start=1):
     
     # --- Liberar memoria ---
     Modelo_posiciones_con_pesos.dispose()
+
 
 print("\n🎉 ¡PROCESO TOTALMENTE FINALIZADO! Revisa tu archivo Excel.")
