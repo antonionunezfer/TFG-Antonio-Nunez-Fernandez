@@ -53,29 +53,29 @@ for indice, nombre_archivo in enumerate(archivos_txt, start=1):
     Modelo_posiciones.setParam('OutputFlag', 0)  # Gurobi en modo silencioso
 
     # --- Variables de decisión ---
-    β = Modelo_posiciones.addVars(trabajos, posiciones, vtype=GRB.BINARY, name="beta")
+    beta = Modelo_posiciones.addVars(trabajos, posiciones, vtype=GRB.BINARY, name="beta")
     C = Modelo_posiciones.addVars(posiciones, maquinas, lb=0, vtype=GRB.CONTINUOUS, name="C")
     CC = Modelo_posiciones.addVars(trabajos, maquinas, lb=0, vtype=GRB.CONTINUOUS, name="CC")
 
     # --- Restricciones ---
     for i in range(trabajos):
-        Modelo_posiciones.addConstr(quicksum(β[i, k] for k in range(posiciones)) == 1)
+        Modelo_posiciones.addConstr(quicksum(beta[i, k] for k in range(posiciones)) == 1)
 
     for k in range(posiciones):
-        Modelo_posiciones.addConstr(quicksum(β[i, k] for i in range(trabajos)) == 1)
+        Modelo_posiciones.addConstr(quicksum(beta[i, k] for i in range(trabajos)) == 1)
 
-    Modelo_posiciones.addConstr(C[0, 0] == quicksum(p[i][0] * β[i, 0] for i in range(trabajos)))
+    Modelo_posiciones.addConstr(C[0, 0] == quicksum(p[i][0] * beta[i, 0] for i in range(trabajos)))
 
     for k in range(1, posiciones):
-        Modelo_posiciones.addConstr(C[k, 0] >= C[k-1, 0] + quicksum(p[i][0] * β[i, k] for i in range(trabajos)))
+        Modelo_posiciones.addConstr(C[k, 0] >= C[k-1, 0] + quicksum(p[i][0] * beta[i, k] for i in range(trabajos)))
 
     for k in range(posiciones):    
         for j in range(1, maquinas):
-            Modelo_posiciones.addConstr(C[k, j] >= C[k, j-1] + quicksum(p[i][j] * β[i, k] for i in range(trabajos)))
+            Modelo_posiciones.addConstr(C[k, j] >= C[k, j-1] + quicksum(p[i][j] * beta[i, k] for i in range(trabajos)))
 
     for k in range(1, posiciones):    
         for j in range(1, maquinas):
-            Modelo_posiciones.addConstr(C[k, j] >= C[k-1, j] + quicksum(p[i][j] * β[i, k] for i in range(trabajos)))
+            Modelo_posiciones.addConstr(C[k, j] >= C[k-1, j] + quicksum(p[i][j] * beta[i, k] for i in range(trabajos)))
 
     # --- Función objetivo ---
     ultima_maquina = maquinas - 1
@@ -110,5 +110,6 @@ for indice, nombre_archivo in enumerate(archivos_txt, start=1):
     
     # --- Liberar memoria ---
     Modelo_posiciones.dispose()
+
 
 print("\n🎉 ¡PROCESO TOTALMENTE FINALIZADO! Revisa tu archivo Excel.")
