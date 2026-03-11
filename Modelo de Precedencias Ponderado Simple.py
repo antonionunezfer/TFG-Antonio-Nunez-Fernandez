@@ -23,19 +23,19 @@ Modelo_precedencias_CON_PESO = Model("Modelo_precedencias")
 Modelo_precedencias_CON_PESO.setParam(GRB.Param.TimeLimit, 3600)
 
 # --- Variables de decisión ---
-α = Modelo_precedencias_CON_PESO.addVars(trabajos, trabajos, vtype=GRB.BINARY, name="alfa")
+alfa = Modelo_precedencias_CON_PESO.addVars(trabajos, trabajos, vtype=GRB.BINARY, name="alfa")
 C = Modelo_precedencias_CON_PESO.addVars(trabajos, maquinas, lb=0, vtype=GRB.CONTINUOUS, name="C")
 
 # --- Restricciones ---
 # 1. Todo par de trabajos tiene un orden de precedencia
 for i in range(trabajos):
     for k in range(i + 1, trabajos):
-        Modelo_precedencias_CON_PESO.addConstr(α[i, k] + α[k, i] == 1, name=f"prec_{i}_{k}")
+        Modelo_precedencias_CON_PESO.addConstr(alfa[i, k] + alfa[k, i] == 1, name=f"prec_{i}_{k}")
 
 # 2. Tiempo en la primera máquina
 for i in range(trabajos):
     Modelo_precedencias_CON_PESO.addConstr(
-        C[i, 0] >= quicksum(p[k][0] * α[k, i] for k in range(trabajos) if k != i) + p[i][0],
+        C[i, 0] >= quicksum(p[k][0] * alfa[k, i] for k in range(trabajos) if k != i) + p[i][0],
         name=f"maquina_0_trabajo_{i}"
     )
 
@@ -45,7 +45,7 @@ for i in range(trabajos):
         if i != k:
             for j in range(maquinas):
                 Modelo_precedencias_CON_PESO.addConstr(
-                    C[k, j] >= C[i, j] + p[k][j] * α[i, k] - M * (1 - α[i, k]),
+                    C[k, j] >= C[i, j] + p[k][j] * alfa[i, k] - M * (1 - alfa[i, k]),
                     name=f"disyuntiva_{i}_{k}_{j}"
                 )
             
@@ -117,6 +117,7 @@ elif Modelo_precedencias_CON_PESO.status == GRB.INFEASIBLE:
     print("El modelo es infactible. Revisa las restricciones.")
 else:
     print(f"Proceso finalizado sin solución óptima. Status: {Modelo_precedencias_CON_PESO.status}")
+
 
 
 
