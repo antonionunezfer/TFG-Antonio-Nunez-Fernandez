@@ -28,7 +28,7 @@ Modelo_posiciones_con_pesos.setParam(GRB.Param.TimeLimit, 3600)
 
 # --- Variables de decisión ---
 # β_ik: binaria, 1 si el trabajo i corresponde a la posición k, 0 en caso contrario.
-β = Modelo_posiciones_con_pesos.addVars(trabajos, posiciones, vtype=GRB.BINARY, name="beta")
+beta = Modelo_posiciones_con_pesos.addVars(trabajos, posiciones, vtype=GRB.BINARY, name="beta")
 
 # C_kj: tiempo de finalización de la posicion k en la maquina j.
 C = Modelo_posiciones_con_pesos.addVars(posiciones, maquinas, lb=0, vtype=GRB.CONTINUOUS, name="C")
@@ -39,34 +39,34 @@ CC = Modelo_posiciones_con_pesos.addVars(trabajos, maquinas, lb=0, vtype=GRB.CON
 # --- Restricciones ---------------------------------
 #---------------------------------------------------------
 for i in range(trabajos):
-    Modelo_posiciones_con_pesos.addConstr(quicksum(β[i, k] for k in range(posiciones)) == 1)
+    Modelo_posiciones_con_pesos.addConstr(quicksum(beta[i, k] for k in range(posiciones)) == 1)
 
 #-----------------------------------------------
 for k in range(posiciones):
-    Modelo_posiciones_con_pesos.addConstr(quicksum(β[i, k] for i in range(trabajos)) == 1)
+    Modelo_posiciones_con_pesos.addConstr(quicksum(beta[i, k] for i in range(trabajos)) == 1)
 
 #-----------------------------------------------
-Modelo_posiciones_con_pesos.addConstr(C[0, 0] == quicksum(p[i][0] * β[i, 0] for i in range(trabajos)))
+Modelo_posiciones_con_pesos.addConstr(C[0, 0] == quicksum(p[i][0] * beta[i, 0] for i in range(trabajos)))
 #-------------------------------------------
 for k in range(1, posiciones):
-    Modelo_posiciones_con_pesos.addConstr(C[k, 0] >= C[k-1, 0] + quicksum(p[i][0] * β[i, k] for i in range(trabajos)))
+    Modelo_posiciones_con_pesos.addConstr(C[k, 0] >= C[k-1, 0] + quicksum(p[i][0] * beta[i, k] for i in range(trabajos)))
 
 for k in range(posiciones):    
     for j in range(1, maquinas):
-        Modelo_posiciones_con_pesos.addConstr(C[k, j] >= C[k, j-1] + quicksum(p[i][j] * β[i, k] for i in range(trabajos)))
+        Modelo_posiciones_con_pesos.addConstr(C[k, j] >= C[k, j-1] + quicksum(p[i][j] * beta[i, k] for i in range(trabajos)))
 
 for k in range(1, posiciones):    
     for j in range(1, maquinas):
-        Modelo_posiciones_con_pesos.addConstr(C[k, j] >= C[k-1, j] + quicksum(p[i][j] * β[i, k] for i in range(trabajos)))
+        Modelo_posiciones_con_pesos.addConstr(C[k, j] >= C[k-1, j] + quicksum(p[i][j] * beta[i, k] for i in range(trabajos)))
 
 
 ultima_maquina = maquinas - 1
 
 for i in range(trabajos):
     for k in range(posiciones):
-        Modelo_posiciones_con_pesos.addConstr(CC[i, ultima_maquina] >= C[k, ultima_maquina] - M * (1 - β[i, k]))
+        Modelo_posiciones_con_pesos.addConstr(CC[i, ultima_maquina] >= C[k, ultima_maquina] - M * (1 - beta[i, k]))
 
-# --- Función objetivo: Minimizar sumatorio (w_i * C[i,última_máquina])
+# --- Función objetivo: Minimizar sumatorio (w_i * CC[i,última_máquina])
 Modelo_posiciones_con_pesos.setObjective(quicksum(w[i] * CC[i, ultima_maquina] for i in range(trabajos)), GRB.MINIMIZE)
 
 # --- Resolver el modelo ---
@@ -122,4 +122,5 @@ if Modelo_posiciones_con_pesos.status in [GRB.OPTIMAL, GRB.TIME_LIMIT]:
 elif Modelo_posiciones_con_pesos.status == GRB.INFEASIBLE:
     print("El modelo es infactible. Revisa las restricciones.")
 else:
+
     print(f"Proceso finalizado sin solución óptima. Status: {Modelo_posiciones_con_pesos.status}")
