@@ -25,7 +25,7 @@ Modelo_posiciones.setParam(GRB.Param.TimeLimit, 3600)
 
 # --- Variables de decisión ---
 # β_ik: binaria, 1 si el trabajo i corresponde a la posición k, 0 en caso contrario.
-β = Modelo_posiciones.addVars(trabajos, posiciones, vtype=GRB.BINARY, name="beta")
+beta = Modelo_posiciones.addVars(trabajos, posiciones, vtype=GRB.BINARY, name="beta")
 
 # C_kj: tiempo de finalización de la posicion k en la maquina j.
 C = Modelo_posiciones.addVars(posiciones, maquinas, lb=0, vtype=GRB.CONTINUOUS, name="C")
@@ -36,25 +36,25 @@ CC = Modelo_posiciones.addVars(trabajos, maquinas, lb=0, vtype=GRB.CONTINUOUS, n
 # --- Restricciones ---------------------------------
 #---------------------------------------------------------
 for i in range(trabajos):
-    Modelo_posiciones.addConstr(quicksum(β[i, k] for k in range(posiciones)) == 1)
+    Modelo_posiciones.addConstr(quicksum(beta[i, k] for k in range(posiciones)) == 1)
 
 #-----------------------------------------------
 for k in range(posiciones):
-    Modelo_posiciones.addConstr(quicksum(β[i, k] for i in range(trabajos)) == 1)
+    Modelo_posiciones.addConstr(quicksum(beta[i, k] for i in range(trabajos)) == 1)
 
 #-----------------------------------------------
-Modelo_posiciones.addConstr(C[0, 0] == quicksum(p[i][0] * β[i, 0] for i in range(trabajos)))
+Modelo_posiciones.addConstr(C[0, 0] == quicksum(p[i][0] * beta[i, 0] for i in range(trabajos)))
 #-------------------------------------------
 for k in range(1, posiciones):
-    Modelo_posiciones.addConstr(C[k, 0] >= C[k-1, 0] + quicksum(p[i][0] * β[i, k] for i in range(trabajos)))
+    Modelo_posiciones.addConstr(C[k, 0] >= C[k-1, 0] + quicksum(p[i][0] * beta[i, k] for i in range(trabajos)))
 
 for k in range(posiciones):    
     for j in range(1, maquinas):
-        Modelo_posiciones.addConstr(C[k, j] >= C[k, j-1] + quicksum(p[i][j] * β[i, k] for i in range(trabajos)))
+        Modelo_posiciones.addConstr(C[k, j] >= C[k, j-1] + quicksum(p[i][j] * beta[i, k] for i in range(trabajos)))
 
 for k in range(1, posiciones):    
     for j in range(1, maquinas):
-        Modelo_posiciones.addConstr(C[k, j] >= C[k-1, j] + quicksum(p[i][j] * β[i, k] for i in range(trabajos)))
+        Modelo_posiciones.addConstr(C[k, j] >= C[k-1, j] + quicksum(p[i][j] * beta[i, k] for i in range(trabajos)))
 
 
 ultima_maquina = maquinas - 1
@@ -117,3 +117,4 @@ else:
   
 
     
+
